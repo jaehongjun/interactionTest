@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback } from "react";
 import "./App.css";
-
+import { throttle } from "throttle-debounce";
 import Lottie from "./Lottie";
 import a from "./lottie/a";
 import b from "./lottie/b";
@@ -64,23 +64,21 @@ function App() {
   const totalRef = useRef(null);
   const [current, setCurrent] = useState([]);
   const [state, setState] = useState(0);
-
+  const [position, setPosition] = useState();
   useEffect(() => {
     console.log(current);
   }, [current]);
-  const onWheel = useCallback(
-    e => {
-      if (e.deltaY < 0) {
-        setState(state + 1);
-        console.log(`up! ${state}`);
-      } // up
-      else if (e.deltaY > 0) {
-        setState(state - 1);
-        console.log(`down! ${state}`);
-      } // down
-    },
-    [state]
-  );
+  const onWheel = e => {
+    if (e.deltaY < 0) {
+      setState(state + 1);
+      console.log(`up! ${state}`);
+    } // up
+    else if (e.deltaY > 0) {
+      setState(state - 1);
+      console.log(`down! ${state}`);
+    } // down
+  };
+
   useEffect(() => {
     if (totalRef) {
       const { children } = totalRef.current;
@@ -91,19 +89,45 @@ function App() {
       setCurrent(componentsSpace);
     }
   }, [totalRef]);
-  const onScroll = useCallback(e => {
-    console.log(window.scrollY);
+  const onScroll = useCallback(() => {
+    setPosition(window.scrollY);
   }, []);
+
+  const findIndex = ({ array = [], position }) => {
+    const condition = Array.from(array).filter((item, index) => {
+      return item < position;
+    });
+
+    return condition.length;
+  };
+
+  const [activeCurrent, setActiveCurrent] = useState();
   useEffect(() => {
-    window.addEventListener("wheel", onWheel);
-    return () => {
-      window.removeEventListener("wheel", onWheel);
-    };
-  }, [onWheel, state]);
+    console.log(position);
+    if (current) {
+      const index = findIndex.call(this, { array: current, position });
+      setActiveCurrent(index);
+    }
+    // return () => {
+    //   cleanup
+    // };
+  }, [position]);
+  // useEffect(() => {
+  //   window.addEventListener("wheel", throttle(1000, onWheel.bind(this)));
+  //   return () => {
+  //     window.removeEventListener("wheel", throttle(1000, onWheel.bind(this)));
+  //   };
+  // }, [onWheel, state]);
   useEffect(() => {
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener(
+      "scroll",
+      throttle(300, () => onScroll())
+    );
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener(
+        "scroll",
+        throttle(300, () => onScroll())
+      );
     };
   }, [onScroll]);
   return (
@@ -123,7 +147,12 @@ function App() {
       </header>
       <div ref={totalRef}>
         {defaultOptions.map((options, index) => (
-          <Lottie option={options.option} key={index}></Lottie>
+          <Lottie
+            option={options.option}
+            key={index}
+            index={index}
+            activeCurrent={activeCurrent}
+          ></Lottie>
         ))}
       </div>
     </div>

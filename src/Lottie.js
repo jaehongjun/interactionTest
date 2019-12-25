@@ -6,7 +6,7 @@ const LottieDiv = styled.section`
   height: 800px;
 `;
 
-const Lottie = ({ option }) => {
+const Lottie = ({ option, index, activeCurrent }) => {
   const ref = useRef(null);
   const [result, setResult] = useState();
   useEffect(() => {
@@ -18,11 +18,17 @@ const Lottie = ({ option }) => {
     // console.log(resultNext, ref, { ...option, container: ref.current });
     // lottie.play();
     // resultNext.play();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
-    if (result) result.play();
-    lottie.play();
-  }, [result]);
+    console.log(index ,
+      activeCurrent)
+      if(result){
+    if ( index ===
+      activeCurrent) {result.play()}
+      else result.stop()
+    }
+  }, [activeCurrent, index, result]);
   return (
     <section name="a" className="fdsf">
       <LottieDiv ref={ref}></LottieDiv>
